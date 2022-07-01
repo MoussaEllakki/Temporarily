@@ -6,16 +6,14 @@ class ViewController: UIViewController , UITableViewDelegate , UITableViewDataSo
   
     @IBOutlet weak var GuestNumber: UILabel!
     @IBOutlet weak var tableSum: UILabel!
-    var ref :  DatabaseReference!
-    
     @IBOutlet weak var TableNumber: UILabel!
     @IBOutlet weak var orderCollectionView: UICollectionView!
     @IBOutlet weak var MyTableView: UITableView!
- 
-   
     
+    var ref :  DatabaseReference!
+    
+    var messageForuser = MessageForUser()
     var restaurant = Restaurant()
-    var order = Order()
     var table = Table()
     var guest = Guest()
     var guestNumber = 1
@@ -31,13 +29,9 @@ class ViewController: UIViewController , UITableViewDelegate , UITableViewDataSo
          orderCollectionView.dataSource = self
         
          ref = Database.database().reference()
-         ref.child("name").setValue("alex1")
+         TableNumber.text = "Bord \(tableNumber)"
         
-        TableNumber.text = "Bord \(tableNumber)"
-        
-   
-        
-    }
+     }
 
     
     
@@ -45,16 +39,12 @@ class ViewController: UIViewController , UITableViewDelegate , UITableViewDataSo
         return restaurant.allMenu.count
     }
     
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "tCell", for: indexPath) as! TableViewCell
-        
         let title = restaurant.allMenu[indexPath.row].tittle
         let menu = restaurant.allMenu[indexPath.row].menu
-        
-        print("")
-        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>  jag skapar collection \(indexPath.row)")
-        print("")
         cell.viewController = self
         cell.setUpCell(title: title, menu: menu )
         return cell
@@ -63,31 +53,30 @@ class ViewController: UIViewController , UITableViewDelegate , UITableViewDataSo
     
     
     
-    
-    
-    
-    
+
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return order.guestOrders.count
+        return guest.orders.count
     }
+    
+    
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "orderCell", for: indexPath) as! OrderCollectionViewCell
-         cell.orderName.text = order.guestOrders[indexPath.row].name
+        cell.orderName.text = guest.orders[indexPath.row].name
         return cell
         
     }
     
+    
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        
-        order.guestOrders.remove(at: indexPath.row)
-        orderCollectionView.reloadData()
         table.getTableSumMinus(type: guest.orders[indexPath.row])
         guest.deleteOrder(index: indexPath.row)
-
-        updateOrderInformation()
+        orderCollectionView.reloadData()
+         updateOrderInformation()
+    
         
     }
     
@@ -96,7 +85,6 @@ class ViewController: UIViewController , UITableViewDelegate , UITableViewDataSo
     func visaGuestOrder (viewCon : ViewController , order : Type, comp : @escaping () -> Void){
      
 
-        viewCon.order.guestOrders.append(order)
         viewCon.orderCollectionView.reloadData()
         guest.orderFood(type: order)
         table.getTableSumPlus(type: order)
@@ -109,9 +97,20 @@ class ViewController: UIViewController , UITableViewDelegate , UITableViewDataSo
    
     @IBAction func btnNext(_ sender: Any) {
       
-        var guest =  Guest()
-        guestNumber += 1
-        updateOrderInformation()
+        if (guest.sum == 0.0){
+            
+            messageForuser.sendMessage(controller: self, msg: messageForuser.currentGuestNotorder)
+            
+        }else{
+            
+            table.guests.append(guest)
+             guest =  Guest()
+            guestNumber += 1
+            orderCollectionView.reloadData()
+            updateOrderInformation()
+            
+        }
+        
         
         
     }
@@ -119,7 +118,10 @@ class ViewController: UIViewController , UITableViewDelegate , UITableViewDataSo
     
     @IBAction func btnSend(_ sender: Any) {
         
-        
+        if (table.sum == 0.0){
+            
+            messageForuser.sendMessage(controller: self, msg: messageForuser.NoOrder)
+        }
         
     }
     
